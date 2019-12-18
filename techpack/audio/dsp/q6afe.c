@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
  * Copyright (c) 2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (C) 2019 XiaoMi, Inc.
  */
 #include <linux/slab.h>
 #include <linux/debugfs.h>
@@ -8389,6 +8390,7 @@ int afe_validate_port(u16 port_id)
 	case SLIMBUS_2_RX:
 	case SLIMBUS_2_TX:
 	case SLIMBUS_3_RX:
+	case SLIMBUS_3_TX:
 	case INT_BT_SCO_RX:
 	case INT_BT_SCO_TX:
 	case INT_BT_A2DP_RX:

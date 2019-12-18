@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /* Copyright (c) 2015-2020, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2019 XiaoMi, Inc.
  */
 #include <linux/module.h>
 #include <linux/init.h>
@@ -25,6 +26,7 @@
 #include "wcd-mbhc-legacy.h"
 #include "wcd-mbhc-adc.h"
 #include <asoc/wcd-mbhc-v2-api.h>
+#include <soc/qcom/socinfo.h>
 
 void wcd_mbhc_jack_report(struct wcd_mbhc *mbhc,
 			  struct snd_soc_jack *jack, int status, int mask)
@@ -208,7 +210,6 @@ static int wcd_event_notify(struct notifier_block *self, unsigned long val,
 	struct snd_soc_component *component = mbhc->component;
 	bool micbias2 = false;
 	bool micbias1 = false;
-	u8 fsm_en = 0;
 
 	pr_debug("%s: event %s (%d)\n", __func__,
 		 wcd_mbhc_get_event_string(event), event);
@@ -249,12 +250,7 @@ static int wcd_event_notify(struct notifier_block *self, unsigned long val,
 					false);
 out_micb_en:
 		/* Disable current source if micbias enabled */
-		if (mbhc->mbhc_cb->mbhc_micbias_control) {
-			WCD_MBHC_REG_READ(WCD_MBHC_FSM_EN, fsm_en);
-			if (fsm_en)
-				WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_BTN_ISRC_CTL,
-							 0);
-		} else {
+		if (!mbhc->mbhc_cb->mbhc_micbias_control) {
 			mbhc->is_hs_recording = true;
 			wcd_enable_curr_micbias(mbhc, WCD_MBHC_EN_MB);
 		}
@@ -263,18 +259,6 @@ out_micb_en:
 			mbhc->mbhc_cb->set_cap_mode(component, micbias1, true);
 		break;
 	case WCD_EVENT_PRE_MICBIAS_2_OFF:
-		/*
-		 * Before MICBIAS_2 is turned off, if FSM is enabled,
-		 * make sure current source is enabled so as to detect
-		 * button press/release events
-		 */
-		if (mbhc->mbhc_cb->mbhc_micbias_control &&
-		    !mbhc->micbias_enable) {
-			WCD_MBHC_REG_READ(WCD_MBHC_FSM_EN, fsm_en);
-			if (fsm_en)
-				WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_BTN_ISRC_CTL,
-							 3);
-		}
 		break;
 	/* MICBIAS usage change */
 	case WCD_EVENT_POST_DAPM_MICBIAS_2_OFF:
@@ -692,6 +676,7 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 					&mbhc->zl, &mbhc->zr);
 			WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_FSM_EN,
 						 fsm_en);
+#if 0
 			if ((mbhc->zl > mbhc->mbhc_cfg->linein_th) &&
 				(mbhc->zr > mbhc->mbhc_cfg->linein_th) &&
 				(jack_type == SND_JACK_HEADPHONE)) {
@@ -710,6 +695,7 @@ void wcd_mbhc_report_plug(struct wcd_mbhc *mbhc, int insertion,
 				pr_debug("%s: Marking jack type as SND_JACK_LINEOUT\n",
 				__func__);
 			}
+#endif
 		}
 
 		/* Do not calculate impedance again for lineout
@@ -844,6 +830,8 @@ void wcd_mbhc_find_plug_and_report(struct wcd_mbhc *mbhc,
 			/* Disable HW FSM and current source */
 			WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_FSM_EN, 0);
 			WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_BTN_ISRC_CTL, 0);
+			mbhc->mbhc_cb->mbhc_micbias_control(mbhc->codec,
+							MIC_BIAS_2, MICB_PULLUP_DISABLE);
 			/* Setup for insertion detection */
 			WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_ELECT_DETECTION_TYPE,
 						 1);
@@ -927,10 +915,6 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 	else
 		pr_info("%s: hs_detect_plug work not cancelled\n", __func__);
 
-	/* Enable micbias ramp */
-	if (mbhc->mbhc_cb->mbhc_micb_ramp_control)
-		mbhc->mbhc_cb->mbhc_micb_ramp_control(component, true);
-
 	if (mbhc->mbhc_cb->micbias_enable_status)
 		micbias1 = mbhc->mbhc_cb->micbias_enable_status(mbhc,
 						MIC_BIAS_1);
@@ -979,6 +963,8 @@ static void wcd_mbhc_swch_irq_handler(struct wcd_mbhc *mbhc)
 		/* Disable HW FSM */
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_FSM_EN, 0);
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_BTN_ISRC_CTL, 0);
+		mbhc->mbhc_cb->mbhc_micbias_control(mbhc->codec,
+						MIC_BIAS_2, MICB_PULLUP_DISABLE);
 		if (mbhc->mbhc_cb->mbhc_common_micb_ctrl)
 			mbhc->mbhc_cb->mbhc_common_micb_ctrl(component,
 					MBHC_COMMON_MICB_TAIL_CURR, false);
@@ -1636,6 +1622,9 @@ static int wcd_mbhc_usb_c_analog_setup_gpios(struct wcd_mbhc *mbhc,
 		else
 			mbhc->usbc_force_pr_mode = true;
 
+		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_MIC_CLAMP_CTL, 2);
+		mbhc->mbhc_cfg->enable_dual_adc_gpio(mbhc->mbhc_cfg->dual_adc_gpio_node, 0);
+
 		if (config->usbc_en1_gpio_p)
 			rc = msm_cdc_pinctrl_select_active_state(
 				config->usbc_en1_gpio_p);
@@ -1651,6 +1640,8 @@ static int wcd_mbhc_usb_c_analog_setup_gpios(struct wcd_mbhc *mbhc,
 		if (config->usbc_force_gpio_p)
 			msm_cdc_pinctrl_select_sleep_state(
 				config->usbc_force_gpio_p);
+
+		mbhc->mbhc_cfg->enable_dual_adc_gpio(mbhc->mbhc_cfg->dual_adc_gpio_node, 1);
 
 		if (mbhc->usbc_force_pr_mode) {
 			pval.intval = POWER_SUPPLY_TYPEC_PR_DUAL;

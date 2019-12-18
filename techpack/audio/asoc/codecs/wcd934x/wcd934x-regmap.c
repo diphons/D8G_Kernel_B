@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2018, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2019 XiaoMi, Inc.
  */
 
 #include <linux/regmap.h>
@@ -722,7 +723,7 @@ static const struct reg_default wcd934x_defaults[] = {
 	{ WCD934X_EAR_STATUS_REG,                          0x04 },
 	{ WCD934X_EAR_EAR_MISC,                            0x28 },
 	{ WCD934X_DIFF_LO_MISC,                            0x03 },
-	{ WCD934X_DIFF_LO_LO2_COMPANDER,                   0x00 },
+	{ WCD934X_DIFF_LO_LO2_COMPANDER,                   0x04 },
 	{ WCD934X_DIFF_LO_LO1_COMPANDER,                   0x00 },
 	{ WCD934X_DIFF_LO_COMMON,                          0x40 },
 	{ WCD934X_DIFF_LO_BYPASS_EN,                       0x00 },
