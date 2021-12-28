@@ -5725,7 +5725,7 @@ static int msm_routing_ec_ref_rx_put(struct snd_kcontrol *kcontrol,
 
 	if (state_rx || (!state_rx && wakeup_ext_ec_ref == 0 && voip_ext_ec_common_ref == 0)) {
 		pr_info("%s: update state!\n", __func__);
-		adm_ec_ref_rx_id(ec_ref_port_id);
+		adm_ec_ref_rx_id(msm_ec_ref_port_id);
 		mutex_unlock(&routing_lock);
 		snd_soc_dapm_mux_update_power(widget->dapm, kcontrol,
 					msm_route_ec_ref_rx, e, update);

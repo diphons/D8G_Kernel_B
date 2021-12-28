@@ -578,7 +578,7 @@ static void wcd_mbhc_adc_update_fsm_source(struct wcd_mbhc *mbhc,
 	case MBHC_PLUG_TYPE_HEADSET:
 	case MBHC_PLUG_TYPE_ANC_HEADPHONE:
 		WCD_MBHC_REG_UPDATE_BITS(WCD_MBHC_BTN_ISRC_CTL, 0);
-		mbhc->mbhc_cb->mbhc_micbias_control(mbhc->codec,
+		mbhc->mbhc_cb->mbhc_micbias_control(mbhc->component,
 				MIC_BIAS_2, MICB_PULLUP_ENABLE);
 		break;
 	default:

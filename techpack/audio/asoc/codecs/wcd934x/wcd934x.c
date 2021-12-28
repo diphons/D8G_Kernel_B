@@ -6205,7 +6205,7 @@ static int tavil_mad_input_put(struct snd_kcontrol *kcontrol,
 
 	if (!strcmp("AMIC2", mad_input_widget)) {
 		mic_bias_found = 2;
-		dev_info(codec->dev,
+		dev_info(component->dev,
 			"%s: tavil input widget = %s, enable MIC BIAS2 directly.\n",
 			__func__, mad_input_widget);
 	} else {
@@ -6213,7 +6213,7 @@ static int tavil_mad_input_put(struct snd_kcontrol *kcontrol,
 			if (!strcmp(card->of_dapm_routes[i].sink, mad_input_widget)) {
 				source_widget = card->of_dapm_routes[i].source;
 				if (!source_widget) {
-					dev_err(codec->dev,
+					dev_err(component->dev,
 						"%s: invalid source widget\n",
 						__func__);
 					return -EINVAL;
@@ -6430,8 +6430,8 @@ static int tavil_rx_hph_mode_put(struct snd_kcontrol *kcontrol,
 static int codec_version_get(struct snd_kcontrol *kcontrol,
 				 struct snd_ctl_elem_value *ucontrol)
 {
-	struct snd_soc_codec *codec = snd_soc_kcontrol_codec(kcontrol);
-	struct tavil_priv *tavil = snd_soc_codec_get_drvdata(codec);
+	struct snd_soc_component *component = snd_soc_kcontrol_component(kcontrol);
+	struct tavil_priv *tavil = snd_soc_component_get_drvdata(component);
 
 	struct wcd9xxx *wcd9xxx= tavil->wcd9xxx;
 
@@ -6451,7 +6451,7 @@ static int codec_version_get(struct snd_kcontrol *kcontrol,
 		ucontrol->value.integer.value[0] = 4;
 		break;
 	default:
-		dev_warn(codec->dev, "%s:Invalid codec version %d\n",
+		dev_warn(component->dev, "%s:Invalid codec version %d\n",
 			__func__, wcd9xxx->version);
 	}
 
