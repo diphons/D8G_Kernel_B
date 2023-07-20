@@ -21,6 +21,15 @@ fw-external-y := $(subst $(quote),,$(CONFIG_EXTRA_FIRMWARE))
 # accurate. In the latter case it doesn't matter -- it'll use $(fw-shipped-all).
 # But be aware that the config file might not be included at all.
 
+fw-shipped-$(CONFIG_TOUCHSCREEN_ATMEL_MXT) += mXT640U0x1410E8.fw mxt_640u_gov_config.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_ST_FTS_V521) += st_fts_e1.ftb st_fts_e8.ftb st_fts.ftb st_fts_e5.ftb
+fw-shipped-$(CONFIG_INPUT_PRESS_NDT_F60) += ndt_fw.bin
+fw-shipped-$(CONFIG_INPUT_PRESS_NDT_M65) += ndt_fw_m65.bin
+fw-shipped-$(CONFIG_TOUCHSCREEN_NT36XXX_LOS) += novatek_nt36672_e10.fw novatek_nt36672_e10_hw01.fw \
+						novatek_nt36672_e10_hw02.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FORCE) += synaptics_jdi_3330_d5x.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_FT5X46) += ft8716_ebbg_incell_ebbg_d5x.fw
+
 quiet_cmd_ihex  = IHEX    $@
       cmd_ihex  = $(OBJCOPY) -Iihex -Obinary $< $@
 
