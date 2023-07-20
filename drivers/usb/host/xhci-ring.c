@@ -3,6 +3,7 @@
  * xHCI host controller driver
  *
  * Copyright (C) 2008 Intel Corp.
+ * Copyright (C) 2019 XiaoMi, Inc.
  *
  * Author: Sarah Sharp
  * Some code borrowed from the Linux EHCI driver.
@@ -58,6 +59,9 @@
 #include "xhci.h"
 #include "xhci-trace.h"
 #include "xhci-mtk.h"
+extern void kick_usbpd_vbus_sm(void);
+extern unsigned int connected_usb_idVendor;
+extern int connected_usb_idProduct;
 
 /*
  * Returns zero if the TRB isn't in this segment, otherwise it returns the DMA
@@ -287,6 +291,8 @@ void xhci_ring_cmd_db(struct xhci_hcd *xhci)
 
 static bool xhci_mod_cmd_timer(struct xhci_hcd *xhci, unsigned long delay)
 {
+	if (connected_usb_idVendor == 0x2717 && connected_usb_idProduct == 0x3801)
+		delay = msecs_to_jiffies(1000);
 	return mod_delayed_work(system_wq, &xhci->cmd_timer, delay);
 }
 
@@ -343,6 +349,7 @@ static int xhci_abort_cmd_ring(struct xhci_hcd *xhci, unsigned long flags)
 	union xhci_trb *new_deq		= xhci->cmd_ring->dequeue;
 	u64 crcr;
 	int ret;
+	int delay;
 
 	xhci_dbg(xhci, "Abort command ring\n");
 
@@ -369,8 +376,19 @@ static int xhci_abort_cmd_ring(struct xhci_hcd *xhci, unsigned long flags)
 	 * In the future we should distinguish between -ENODEV and -ETIMEDOUT
 	 * and try to recover a -ETIMEDOUT with a host controller reset.
 	 */
+
+	if (connected_usb_idVendor == 0x2717 && connected_usb_idProduct == 0x3801) {
+		delay = 500 * 1000;
+		pr_err("xhci_abort_cmd_ring em headset\n");
+	}
+	else {
+		delay = 5000 * 1000;
+		pr_err("xhci_abort_cmd_ring other\n");
+	}
+
 	ret = xhci_handshake_check_state(xhci, &xhci->op_regs->cmd_ring,
 			CMD_RING_RUNNING, 0, 1000 * 1000);
+
 	if (ret < 0) {
 		xhci_err(xhci, "Abort failed to stop command ring: %d\n", ret);
 		xhci_halt(xhci);

@@ -3,6 +3,7 @@
  * xhci-plat.c - xHCI host controller driver platform Bus Glue.
  *
  * Copyright (C) 2012 Texas Instruments Incorporated - http://www.ti.com
+ * Copyright (C) 2019 XiaoMi, Inc.
  * Author: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
  *
  * A lot of code borrowed from the Linux xHCI driver.
@@ -180,6 +181,7 @@ static int xhci_plat_probe(struct platform_device *pdev)
 {
 	const struct xhci_plat_priv *priv_match;
 	const struct hc_driver	*driver;
+	struct device		*dwc = NULL;
 	struct device		*sysdev, *tmpdev;
 	struct xhci_hcd		*xhci;
 	struct resource         *res;
@@ -209,6 +211,10 @@ static int xhci_plat_probe(struct platform_device *pdev)
 		if (is_of_node(sysdev->fwnode) ||
 			is_acpi_device_node(sysdev->fwnode))
 			break;
+
+	if (sysdev->parent && !sysdev->of_node && sysdev->parent->of_node)
+		dwc =sysdev->parent;
+
 #ifdef CONFIG_PCI
 		else if (sysdev->bus == &pci_bus_type)
 			break;
@@ -341,6 +347,11 @@ static int xhci_plat_probe(struct platform_device *pdev)
 
 	if (device_property_read_u32(&pdev->dev, "usb-core-id", &xhci->core_id))
 		xhci->core_id = -EINVAL;
+
+	if (dwc)
+		hcd->usb_phy = devm_usb_get_phy_by_phandle(dwc, "usb-phy", 0);
+	else
+		hcd->usb_phy = devm_usb_get_phy_by_phandle(sysdev, "usb-phy", 0);
 
 	hcd->usb_phy = devm_usb_get_phy_by_phandle(sysdev, "usb-phy", 0);
 	if (IS_ERR(hcd->usb_phy)) {
