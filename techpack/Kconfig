@@ -3,4 +3,6 @@ menu "Tech packages"
 source "techpack/data/Kconfig"
 source "techpack/wlan/Kconfig"
 
+source "techpack/mi845/Kconfig"
+
 endmenu
