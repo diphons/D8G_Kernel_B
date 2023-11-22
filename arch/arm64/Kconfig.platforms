@@ -457,4 +457,9 @@ config MACH_XIAOMI_E10
         help
           Support for Xiaomi Poco F1 (beryllium)
 
+config D8G_SERVICE
+	bool "d8g helper"
+	help
+	  This enables support for D8G features.
+
 endmenu
