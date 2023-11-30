@@ -92,8 +92,8 @@
 	},					\
 	.num_rate_max = VDD_CX_NUM
 
-#define VDD_GX_FMAX_MAP8(l1, f1, l2, f2, l3, f3, l4, f4, l5, f5, l6, f6, \
-				l7, f7, l8, f8) \
+#define VDD_GX_FMAX_MAP12(l1, f1, l2, f2, l3, f3, l4, f4, l5, f5, l6, f6, l7, f7, \
+				l8, f8, l9, f9, l10, f10, l11, f11, l12, f12) \
 	.vdd_class = &vdd_gfx,			\
 	.rate_max = (unsigned long[VDD_GX_NUM]) {	\
 		[VDD_GX_##l1] = (f1),		\
@@ -104,6 +104,10 @@
 		[VDD_GX_##l6] = (f6),		\
 		[VDD_GX_##l7] = (f7),		\
 		[VDD_GX_##l8] = (f8),		\
+		[VDD_GX_##l9] = (f9),		\
+		[VDD_GX_##l10] = (f10),		\
+		[VDD_GX_##l11] = (f11),		\
+		[VDD_GX_##l12] = (f12),		\
 	},					\
 	.num_rate_max = VDD_GX_NUM
 
@@ -125,9 +129,13 @@ enum vdd_gx_levels {
 	VDD_GX_LOW,		/* SVS */
 	VDD_GX_LOW_L1,		/* SVSL1 */
 	VDD_GX_NOMINAL,		/* NOM */
+	VDD_GX_NOMINAL_1,		/* NOM */
 	VDD_GX_NOMINAL_L1,		/* NOM1 */
 	VDD_GX_HIGH,		/* TURBO */
+	VDD_GX_HIGH_1,		/* TURBO */
 	VDD_GX_HIGH_L1,		/* TURBO1 */
+	VDD_GX_HIGH_L2,		/* TURBO2 */
+	VDD_GX_HIGH_L3,		/* TURBO3 */
 	VDD_GX_NUM,
 };
 
@@ -140,6 +148,7 @@ static int vdd_corner[] = {
 	RPMH_REGULATOR_LEVEL_SVS_L1,		/* VDD_CX_LOW_L1 */
 	RPMH_REGULATOR_LEVEL_NOM,		/* VDD_CX_NOMINAL */
 	RPMH_REGULATOR_LEVEL_TURBO,		/* VDD_CX_HIGH */
+	RPMH_REGULATOR_LEVEL_TURBO_L1,		/* VDD_CX_HIGH_L1 */
 };
 
 #endif
