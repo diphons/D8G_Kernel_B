@@ -9,6 +9,9 @@
 #include <linux/gpio.h>
 #include <linux/of_gpio.h>
 #include <linux/pwm.h>
+#ifdef CONFIG_D8G_SERVICE
+#include <misc/d8g_helper.h>
+#endif
 #include <video/mipi_display.h>
 
 #include "dsi_panel.h"
@@ -4085,6 +4088,9 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		panel->power_mode != SDE_MODE_DPMS_LP2)
 		dsi_pwr_panel_regulator_mode_set(&panel->power_info,
 			"ibb", REGULATOR_MODE_IDLE);
+#ifdef CONFIG_D8G_SERVICE
+	oplus_panel_status = 3; // DISPLAY_POWER_DOZE
+#endif
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP1);
 	if (rc)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP1 cmd, rc=%d\n",
@@ -4107,6 +4113,9 @@ int dsi_panel_set_lp2(struct dsi_panel *panel)
 	if (!panel->panel_initialized)
 		goto exit;
 
+#ifdef CONFIG_D8G_SERVICE
+	oplus_panel_status = 4; // DISPLAY_POWER_DOZE_SUSPEND
+#endif
 	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_LP2);
 	if (rc)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP2 cmd, rc=%d\n",
@@ -4141,6 +4150,7 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 	if (rc)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_NOLP cmd, rc=%d\n",
 		       panel->name, rc);
+
 exit:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
@@ -4475,6 +4485,11 @@ int dsi_panel_enable(struct dsi_panel *panel)
 		       panel->name, rc);
 	else
 		panel->panel_initialized = true;
+
+#ifdef CONFIG_D8G_SERVICE
+	oplus_panel_status = 2; // DISPLAY_POWER_ON
+#endif
+
 	mutex_unlock(&panel->panel_lock);
 	return rc;
 }
@@ -4562,6 +4577,10 @@ int dsi_panel_disable(struct dsi_panel *panel)
 	}
 	panel->panel_initialized = false;
 	panel->power_mode = SDE_MODE_DPMS_OFF;
+
+#ifdef CONFIG_D8G_SERVICE
+	oplus_panel_status = 0; // DISPLAY_POWER_OFF
+#endif
 
 	mutex_unlock(&panel->panel_lock);
 	return rc;

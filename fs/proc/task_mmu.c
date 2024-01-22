@@ -21,6 +21,13 @@
 #include <linux/pkeys.h>
 #include <linux/mm_inline.h>
 #include <linux/ctype.h>
+#ifdef CONFIG_D8G_SERVICE
+#include <linux/devfreq_boost.h>
+#ifdef CONFIG_CPU_INPUT_BOOST
+#include <linux/cpu_input_boost.h>
+#endif
+#include <misc/d8g_helper.h>
+#endif
 
 #include <asm/elf.h>
 #include <asm/tlb.h>
@@ -183,8 +190,18 @@ static void vma_stop(struct proc_maps_private *priv)
 	up_read(&mm->mmap_sem);
 	mmput(mm);
 
-	sched_migrate_to_cpumask_end(to_cpumask(&priv->old_cpus_allowed),
-				     cpu_lp_mask);
+#ifdef CONFIG_D8G_SERVICE
+	if (set_pid_boost == 1)
+		sched_migrate_to_cpumask_end(to_cpumask(&priv->old_cpus_allowed),
+#ifdef CONFIG_ARCH_SDM845
+						cpu_perf_mask);
+#else
+						cpu_prime_mask);
+#endif
+	else
+#endif
+		sched_migrate_to_cpumask_end(to_cpumask(&priv->old_cpus_allowed),
+						cpu_lp_mask);
 }
 
 static struct vm_area_struct *
@@ -221,8 +238,27 @@ static void *m_start(struct seq_file *m, loff_t *ppos)
 	if (!mm || !mmget_not_zero(mm))
 		return NULL;
 
-	sched_migrate_to_cpumask_start(to_cpumask(&priv->old_cpus_allowed),
-				       cpu_lp_mask);
+#ifdef CONFIG_D8G_SERVICE
+	if (set_pid_boost == 1)
+		sched_migrate_to_cpumask_start(to_cpumask(&priv->old_cpus_allowed),
+#ifdef CONFIG_ARCH_SDM845
+						cpu_perf_mask);
+#else
+						cpu_prime_mask);
+#endif
+	else
+#endif
+		sched_migrate_to_cpumask_start(to_cpumask(&priv->old_cpus_allowed),
+						cpu_lp_mask);
+
+#ifdef CONFIG_D8G_SERVICE
+	if ((oprofile == 1 || oprofile == 3) && oplus_panel_status == 2) {
+		devfreq_boost_kick_max(DEVFREQ_CPU_LLCC_DDR_BW, 100);
+#ifdef CONFIG_CPU_INPUT_BOOST
+		cpu_input_boost_kick();
+#endif
+	}
+#endif
 
 	if (down_read_killable(&mm->mmap_sem)) {
 		mmput(mm);

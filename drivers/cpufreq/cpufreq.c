@@ -30,6 +30,9 @@
 #include <linux/suspend.h>
 #include <linux/syscore_ops.h>
 #include <linux/tick.h>
+#ifdef CONFIG_D8G_SERVICE
+#include <linux/hid_magic.h>
+#endif
 #include <linux/sched/topology.h>
 #include <linux/sched/sysctl.h>
 
@@ -2262,6 +2265,10 @@ static int cpufreq_set_policy(struct cpufreq_policy *policy,
 	if (ret)
 		return ret;
 
+#ifdef CONFIG_D8G_SERVICE
+	restrict_frequency(new_policy);
+#endif
+
 	/* adjust if necessary - all reasons */
 	blocking_notifier_call_chain(&cpufreq_policy_notifier_list,
 			CPUFREQ_ADJUST, new_policy);
@@ -2386,6 +2393,25 @@ unlock:
 	cpufreq_cpu_put(policy);
 }
 EXPORT_SYMBOL(cpufreq_update_policy);
+
+#ifdef CONFIG_D8G_SERVICE
+int cpufreq_policy_reset_limit(void)
+{
+	struct cpufreq_policy *policy;
+	struct cpufreq_policy new_policy;
+	int ret;
+
+	for_each_policy(policy) {
+		memcpy(&new_policy, policy, sizeof(*policy));
+		new_policy.max = policy->cpuinfo.max_freq;
+		ret = cpufreq_set_policy(policy, &new_policy);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+#endif
 
 /*********************************************************************
  *               BOOST						     *
