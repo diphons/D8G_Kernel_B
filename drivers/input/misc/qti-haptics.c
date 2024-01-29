@@ -23,6 +23,9 @@
 #include <linux/types.h>
 #include <linux/uaccess.h>
 #include <linux/qpnp/qpnp-revid.h>
+#ifdef CONFIG_D8G_SERVICE
+#include <misc/d8g_helper.h>
+#endif
 
 enum actutor_type {
 	ACT_LRA,
@@ -503,6 +506,37 @@ static int qti_haptics_module_en(struct qti_hap_chip *chip, bool en)
 	return rc;
 }
 
+#ifndef CONFIG_D8G_SERVICE
+static int haptic_gain = 80;
+module_param(haptic_gain, int, 0644);
+int haptic_gain_show = 0;
+module_param(haptic_gain_show, int, 0444);
+#endif
+static int haptic_set_level(int gain)
+{
+    int val, max_val = HAP_VMAX_MV_MAX;
+
+	// Set gain to use max_val
+	if (gain < max_val || gain > max_val)
+		gain = max_val;
+
+	// haptic_gain in percent
+	if (haptic_gain > 100 )
+		haptic_gain = 100;
+	if (haptic_gain < 20 )
+		haptic_gain = 20;
+
+	val = haptic_gain * gain / 100;
+
+    if (val > max_val)
+        val = max_val;
+	// don't change value on min level
+    if (val < 500)
+        val = 500;
+
+    return val;
+}
+
 static int qti_haptics_config_vmax(struct qti_hap_chip *chip, int vmax_mv)
 {
 	u8 addr, mask, val;
@@ -510,6 +544,9 @@ static int qti_haptics_config_vmax(struct qti_hap_chip *chip, int vmax_mv)
 
 	addr = REG_HAP_VMAX_CFG;
 	mask = HAP_VMAX_MV_MASK;
+	if (haptic_set_level(vmax_mv))
+		vmax_mv = haptic_set_level(vmax_mv);
+	haptic_gain_show = vmax_mv;
 	val = (vmax_mv / HAP_VMAX_MV_LSB) << HAP_VMAX_MV_SHIFT;
 	rc = qti_haptics_masked_write(chip, addr, mask, val);
 	if (rc < 0)
