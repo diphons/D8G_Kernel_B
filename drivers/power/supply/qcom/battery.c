@@ -1576,6 +1576,13 @@ static int pl_disable_vote_callback(struct votable *votable,
 		rerun_election(chip->fv_votable);
 	}
 
+	/* notify parallel state change */
+	if (chip->pl_psy && (chip->pl_disable != pl_disable)
+				&& !chip->fcc_stepper_enable) {
+		power_supply_changed(chip->pl_psy);
+		chip->pl_disable = (bool)pl_disable;
+	}
+
 	pl_dbg(chip, PR_PARALLEL, "parallel charging %s\n",
 		   pl_disable ? "disabled" : "enabled");
 
@@ -2080,6 +2087,8 @@ int qcom_batt_init(struct charger_param *chg_param)
 		goto unreg_notifier;
 	}
 
+	chip->pl_disable = true;
+	chip->cp_disabled = true;
 	chip->qcom_batt_class.name = "qcom-battery",
 	chip->qcom_batt_class.owner = THIS_MODULE,
 	chip->qcom_batt_class.class_groups = batt_class_groups;
