@@ -436,9 +436,6 @@ static void activate_work_func(struct work_struct *work)
 	if (client->callback) {
 		client->callback(client->callback_params,
 			IPA_PM_CLIENT_ACTIVATED);
-	} else {
-		IPA_PM_ERR("client has no callback");
-		WARN_ON(1);
 	}
 	mutex_unlock(&ipa_pm_ctx->client_mutex);
 
@@ -1233,9 +1230,6 @@ int ipa_pm_handle_suspend(u32 pipe_bitmask)
 					client->callback(client->callback_params
 						, IPA_PM_REQUEST_WAKEUP);
 					client_notified[client->hdl] = true;
-				} else {
-					IPA_PM_ERR("client has no callback");
-					WARN_ON(1);
 				}
 			}
 		}
