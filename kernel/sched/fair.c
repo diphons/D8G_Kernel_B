@@ -169,10 +169,18 @@ unsigned int sysctl_sched_cfs_bandwidth_slice		= 4000UL;
  */
 unsigned int capacity_margin				= 1280;
 unsigned int sched_capacity_margin_up[NR_CPUS] = {
+#ifdef CONFIG_ARCH_SDM845
+			1280, 1280, 1280, 1280, 1625, 1625, 1625, 1625
+#else
 			1280, 1280, 1280, 1280, 1625, 1625, 1625, 1024
+#endif
 }; /* ~20% margin for small, ~37% for big, not used for big+  */
 unsigned int sched_capacity_margin_down[NR_CPUS] = {
+#ifdef CONFIG_ARCH_SDM845
+			1024, 1024, 1024, 1024, 1796, 1796, 1796, 1796
+#else
 			1024, 1024, 1024, 1024, 1796, 1796, 1796, 1442
+#endif
 }; /* Not used for small, ~43% margin for big, ~29% for big+ */
 
 #ifdef CONFIG_SCHED_WALT
