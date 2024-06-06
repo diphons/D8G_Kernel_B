@@ -159,7 +159,7 @@ enum {
 };
 
 #ifdef CONFIG_SOUND_CONTROL
-static struct snd_soc_codec *sound_control_codec_ptr;
+static struct snd_soc_component *sound_control_codec_ptr;
 static int custom_hp_left = 0;
 static int custom_hp_right = 0;
 #endif
@@ -1492,10 +1492,10 @@ rtn:
 				      rx_port_value, e, update);
 
 #ifdef CONFIG_SOUND_CONTROL
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_MIX_CTL, custom_hp_left);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_MIX_CTL, custom_hp_right);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL, custom_hp_left);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL, custom_hp_right);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_MIX_CTL, custom_hp_left);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_MIX_CTL, custom_hp_right);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL, custom_hp_left);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL, custom_hp_right);
 #endif
 
 	return 0;
@@ -10519,8 +10519,8 @@ static ssize_t headphone_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%d %d\n",
-		snd_soc_read(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL),
-		snd_soc_read(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL)
+		snd_soc_component_read32(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL),
+		snd_soc_component_read32(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL)
 	);
 }
 
@@ -10541,10 +10541,10 @@ static ssize_t headphone_gain_store(struct kobject *kobj,
 	custom_hp_left = input_l;
 	custom_hp_right = input_r;
 
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_MIX_CTL, input_l);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_MIX_CTL, input_r);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL, input_l);
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL, input_r);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_MIX_CTL, input_l);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_MIX_CTL, input_r);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX1_RX_VOL_CTL, input_l);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX2_RX_VOL_CTL, input_r);
 
 	return count;
 }
@@ -10558,7 +10558,7 @@ static ssize_t mic_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%d\n",
-		snd_soc_read(sound_control_codec_ptr, WCD934X_CDC_TX7_TX_VOL_CTL));
+		snd_soc_component_read32(sound_control_codec_ptr, WCD934X_CDC_TX7_TX_VOL_CTL));
 }
 
 static ssize_t mic_gain_store(struct kobject *kobj,
@@ -10571,7 +10571,7 @@ static ssize_t mic_gain_store(struct kobject *kobj,
 	if (input < -10 || input > 20)
 		input = 0;
 
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_TX7_TX_VOL_CTL, input);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_TX7_TX_VOL_CTL, input);
 
 	return count;
 }
@@ -10585,7 +10585,7 @@ static ssize_t earpiece_gain_show(struct kobject *kobj,
 		struct kobj_attribute *attr, char *buf)
 {
 	return snprintf(buf, PAGE_SIZE, "%d\n",
-		snd_soc_read(sound_control_codec_ptr, WCD934X_CDC_RX0_RX_VOL_CTL));
+		snd_soc_component_read32(sound_control_codec_ptr, WCD934X_CDC_RX0_RX_VOL_CTL));
 }
 
 static ssize_t earpiece_gain_store(struct kobject *kobj,
@@ -10598,7 +10598,7 @@ static ssize_t earpiece_gain_store(struct kobject *kobj,
 	if (input < -10 || input > 20)
 		input = 0;
 
-	snd_soc_write(sound_control_codec_ptr, WCD934X_CDC_RX0_RX_VOL_CTL, input);
+	snd_soc_component_write(sound_control_codec_ptr, WCD934X_CDC_RX0_RX_VOL_CTL, input);
 
 	return count;
 }
@@ -10633,7 +10633,7 @@ static int tavil_soc_codec_probe(struct snd_soc_component *component)
 	void *ptr = NULL;
 
 #ifdef CONFIG_SOUND_CONTROL
-	sound_control_codec_ptr = codec;
+	sound_control_codec_ptr = component;
 #endif
 	control = dev_get_drvdata(component->dev->parent);
 
