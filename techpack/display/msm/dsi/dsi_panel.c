@@ -349,7 +349,7 @@ int dsi_panel_trigger_esd_attack(struct dsi_panel *panel)
 
 	if (gpio_is_valid(r_config->reset_gpio)) {
 		gpio_set_value(r_config->reset_gpio, 0);
-		DSI_INFO("GPIO pulled low to simulate ESD\n");
+		DSI_DEBUG("GPIO pulled low to simulate ESD\n");
 		return 0;
 	}
 	DSI_ERR("failed to pull down gpio\n");
@@ -2911,7 +2911,7 @@ static int dsi_panel_parse_topology(
 	}
 
 	if (topology_override >= 0 && topology_override < top_count) {
-		DSI_INFO("override topology: cfg:%d lm:%d comp_enc:%d intf:%d\n",
+		DSI_DEBUG("override topology: cfg:%d lm:%d comp_enc:%d intf:%d\n",
 			topology_override,
 			topology[topology_override].num_lm,
 			topology[topology_override].num_enc,
@@ -2934,7 +2934,7 @@ static int dsi_panel_parse_topology(
 		goto parse_fail;
 	}
 
-	DSI_INFO("default topology: lm: %d comp_enc:%d intf: %d\n",
+	DSI_DEBUG("default topology: lm: %d comp_enc:%d intf: %d\n",
 		topology[top_sel].num_lm,
 		topology[top_sel].num_enc,
 		topology[top_sel].num_intf);
@@ -2985,7 +2985,7 @@ static int dsi_panel_parse_roi_alignment(struct dsi_parser_utils *utils,
 			align->min_height = value[5];
 		}
 
-		DSI_INFO("roi alignment: [%d, %d, %d, %d, %d, %d]\n",
+		DSI_DEBUG("roi alignment: [%d, %d, %d, %d, %d, %d]\n",
 			align->xstart_pix_align,
 			align->width_pix_align,
 			align->ystart_pix_align,
@@ -3021,7 +3021,7 @@ static int dsi_panel_parse_partial_update_caps(struct dsi_display_mode *mode,
 		else if (!strcmp(data, "single_roi"))
 			roi_caps->num_roi = 1;
 		else {
-			DSI_INFO(
+			DSI_DEBUG(
 			"invalid value for qcom,partial-update-enabled: %s\n",
 			data);
 			return 0;
@@ -3936,7 +3936,7 @@ int dsi_panel_get_mode(struct dsi_panel *panel,
 			if (rc) {
 				rc = 0;
 				mode->panel_mode = panel->panel_mode;
-				DSI_INFO(
+				DSI_DEBUG(
 				"POMS: panel mode isn't specified in timing[%d]\n",
 				child_idx);
 			}
