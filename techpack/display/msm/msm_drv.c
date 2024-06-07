@@ -566,7 +566,11 @@ static int msm_drm_display_thread_create(struct sched_param param,
 		kthread_init_worker(&priv->disp_thread[i].worker);
 		priv->disp_thread[i].dev = ddev;
 		priv->disp_thread[i].thread =
+#ifdef CONFIG_ARCH_KONA
 			kthread_run_perf_critical(cpu_prime_mask,
+#else
+			kthread_run_perf_critical(cpu_perf_mask,
+#endif
 				kthread_worker_fn,
 				&priv->disp_thread[i].worker,
 				"crtc_commit:%d", priv->disp_thread[i].crtc_id);
@@ -586,7 +590,11 @@ static int msm_drm_display_thread_create(struct sched_param param,
 		kthread_init_worker(&priv->event_thread[i].worker);
 		priv->event_thread[i].dev = ddev;
 		priv->event_thread[i].thread =
+#ifdef CONFIG_ARCH_KONA
 			kthread_run_perf_critical(cpu_prime_mask,
+#else
+			kthread_run_perf_critical(cpu_perf_mask,
+#endif
 				kthread_worker_fn,
 				&priv->event_thread[i].worker,
 				"crtc_event:%d", priv->event_thread[i].crtc_id);
@@ -634,7 +642,11 @@ static int msm_drm_display_thread_create(struct sched_param param,
 	 * other important events.
 	 */
 	kthread_init_worker(&priv->pp_event_worker);
+#ifdef CONFIG_ARCH_KONA
 	priv->pp_event_thread = kthread_run_perf_critical(cpu_prime_mask,
+#else
+	priv->pp_event_thread = kthread_run_perf_critical(cpu_perf_mask,
+#endif
 			kthread_worker_fn, &priv->pp_event_worker, "pp_event");
 
 	ret = sched_setscheduler(priv->pp_event_thread,

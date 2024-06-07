@@ -101,7 +101,11 @@
 int drm_irq_install(struct drm_device *dev, int irq)
 {
 	int ret;
+#ifdef CONFIG_ARCH_KONA
 	unsigned long sh_flags = IRQF_PRIME_AFFINE;
+#else
+	unsigned long sh_flags = IRQF_PERF_AFFINE;
+#endif
 
 	if (!drm_core_check_feature(dev, DRIVER_HAVE_IRQ))
 		return -EINVAL;

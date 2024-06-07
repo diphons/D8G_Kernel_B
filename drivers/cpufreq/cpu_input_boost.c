@@ -23,26 +23,34 @@ static unsigned int input_boost_freq_little __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ_LP;
 static unsigned int input_boost_freq_big __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ_PERF;
+#ifdef CONFIG_ARCH_KONA
 static unsigned int input_boost_freq_prime __read_mostly =
 	CONFIG_INPUT_BOOST_FREQ_PRIME;
+#endif
 static unsigned int max_boost_freq_little __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_LP;
 static unsigned int max_boost_freq_big __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_PERF;
+#ifdef CONFIG_ARCH_KONA
 static unsigned int max_boost_freq_prime __read_mostly =
 	CONFIG_MAX_BOOST_FREQ_PRIME;
+#endif
 static unsigned int cpu_freq_min_little __read_mostly =
 	CONFIG_CPU_FREQ_MIN_LP;
 static unsigned int cpu_freq_min_big __read_mostly =
 	CONFIG_CPU_FREQ_MIN_PERF;
+#ifdef CONFIG_ARCH_KONA
 static unsigned int cpu_freq_min_prime __read_mostly =
 	CONFIG_CPU_FREQ_MIN_PRIME;
+#endif
 static unsigned int cpu_freq_idle_little __read_mostly =
 	CONFIG_CPU_FREQ_IDLE_LP;
 static unsigned int cpu_freq_idle_big __read_mostly =
 	CONFIG_CPU_FREQ_IDLE_PERF;
+#ifdef CONFIG_ARCH_KONA
 static unsigned int cpu_freq_idle_prime __read_mostly =
 	CONFIG_CPU_FREQ_IDLE_PRIME;
+#endif
 
 static unsigned short input_boost_duration __read_mostly =
 	CONFIG_INPUT_BOOST_DURATION_MS;
@@ -51,16 +59,24 @@ static unsigned short wake_boost_duration __read_mostly =
 
 module_param(input_boost_freq_little, uint, 0644);
 module_param(input_boost_freq_big, uint, 0644);
+#ifdef CONFIG_ARCH_KONA
 module_param(input_boost_freq_prime, uint, 0644);
+#endif
 module_param(max_boost_freq_little, uint, 0644);
 module_param(max_boost_freq_big, uint, 0644);
+#ifdef CONFIG_ARCH_KONA
 module_param(max_boost_freq_prime, uint, 0644);
+#endif
 module_param(cpu_freq_min_little, uint, 0644);
 module_param(cpu_freq_min_big, uint, 0644);
+#ifdef CONFIG_ARCH_KONA
 module_param(cpu_freq_min_prime, uint, 0644);
+#endif
 module_param(cpu_freq_idle_little, uint, 0644);
 module_param(cpu_freq_idle_big, uint, 0644);
+#ifdef CONFIG_ARCH_KONA
 module_param(cpu_freq_idle_prime, uint, 0644);
+#endif
 
 module_param(input_boost_duration, short, 0644);
 module_param(wake_boost_duration, short, 0644);
@@ -98,12 +114,16 @@ static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
 		freq = max(input_boost_freq_little, cpu_freq_min_little);
+#ifdef CONFIG_ARCH_KONA
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
 		freq = max(input_boost_freq_big, cpu_freq_min_big);
 	else
-                freq = max(input_boost_freq_prime, cpu_freq_min_prime);
-                return min(freq, policy->max);
-
+        freq = max(input_boost_freq_prime, cpu_freq_min_prime);
+#else
+	else
+		freq = max(input_boost_freq_big, cpu_freq_min_big);
+#endif
+    return min(freq, policy->max);
 }
 
 static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
@@ -112,11 +132,16 @@ static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
 		freq = max(max_boost_freq_little, cpu_freq_min_little);
+#ifdef CONFIG_ARCH_KONA
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
 		freq = max(max_boost_freq_big, cpu_freq_min_big);
-        else
-                freq = max(max_boost_freq_prime, cpu_freq_min_prime);
-		return min(freq, policy->max);
+    else
+        freq = max(max_boost_freq_prime, cpu_freq_min_prime);
+#else
+    else
+		freq = max(max_boost_freq_big, cpu_freq_min_big);
+#endif
+	return min(freq, policy->max);
 }
 
 static unsigned int get_min_freq(struct cpufreq_policy *policy)
@@ -125,10 +150,15 @@ static unsigned int get_min_freq(struct cpufreq_policy *policy)
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
 		freq = cpu_freq_min_little;
+#ifdef CONFIG_ARCH_KONA
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
 		freq = cpu_freq_min_big;
-        else
-                freq = cpu_freq_min_prime;
+    else
+        freq = cpu_freq_min_prime;
+#else
+    else
+		freq = cpu_freq_min_big;
+#endif
 	return max(freq, policy->cpuinfo.min_freq);
 }
 
@@ -138,10 +168,15 @@ static unsigned int get_idle_freq(struct cpufreq_policy *policy)
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
 		freq = cpu_freq_idle_little;
+#ifdef CONFIG_ARCH_KONA
 	else if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
 		freq = cpu_freq_idle_big;
-        else
-                freq = cpu_freq_idle_prime;
+    else
+        freq = cpu_freq_idle_prime;
+#else
+    else
+		freq = cpu_freq_idle_big;
+#endif
 	return max(freq, policy->cpuinfo.min_freq);
 }
 
@@ -157,8 +192,10 @@ static void update_online_cpu_policy(void)
 				cpufreq_update_policy(cpu);
 			if (cpumask_intersects(cpumask_of(cpu), cpu_perf_mask))
 				cpufreq_update_policy(cpu);
+#ifdef CONFIG_ARCH_KONA
 			if (cpumask_intersects(cpumask_of(cpu), cpu_prime_mask))
 				cpufreq_update_policy(cpu);
+#endif
 		}
 	}
 	put_online_cpus();
